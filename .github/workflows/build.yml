@@ -45,6 +45,14 @@ jobs:
             rocky_version: "9"
             codename: ""
             extra: ""
+          - src: ondrej
+            distro: debian
+            context: ondrej/debian
+            tagos: trixie
+            php: "7.4"
+            rocky_version: ""
+            codename: trixie
+            extra: ""
     steps:
       - name: Checkout
         uses: actions/checkout@v4

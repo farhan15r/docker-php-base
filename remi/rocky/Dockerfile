@@ -36,6 +36,7 @@ RUN echo 'expose_php = Off' > /etc/php.d/99-hardening.ini && \
     echo 'display_errors = Off' >> /etc/php.d/99-hardening.ini && \
     echo 'display_startup_errors = Off' >> /etc/php.d/99-hardening.ini && \
     echo 'log_errors = On' >> /etc/php.d/99-hardening.ini && \
+    echo 'memory_limit = 128M' >> /etc/php.d/99-hardening.ini && \
     echo 'opcache.validate_timestamps = 0' >> /etc/php.d/99-hardening.ini && \
     echo 'opcache.memory_consumption = 128' >> /etc/php.d/99-hardening.ini && \
     echo 'opcache.interned_strings_buffer = 16' >> /etc/php.d/99-hardening.ini && \
@@ -79,12 +80,12 @@ RUN dnf install -y --enablerepo=crb --setopt install_weak_deps=false --nodocs ht
     rm -f /etc/httpd/conf.d/autoindex.conf /etc/httpd/conf.d/welcome.conf && \
     rpm -qa 'php*' 'httpd*' | sort > /etc/php-packages.txt
 
-RUN echo 'ServerTokens Prod' > /etc/httpd/conf.d/00-hardening.conf && \
-    echo 'ServerSignature Off' >> /etc/httpd/conf.d/00-hardening.conf && \
-    echo 'TraceEnable Off' >> /etc/httpd/conf.d/00-hardening.conf && \
-    echo '<Directory "/var/www/html">' >> /etc/httpd/conf.d/00-hardening.conf && \
-    echo '    Options -Indexes' >> /etc/httpd/conf.d/00-hardening.conf && \
-    echo '</Directory>' >> /etc/httpd/conf.d/00-hardening.conf
+RUN echo 'ServerTokens Prod' > /etc/httpd/conf.d/zz-hardening.conf && \
+    echo 'ServerSignature Off' >> /etc/httpd/conf.d/zz-hardening.conf && \
+    echo 'TraceEnable Off' >> /etc/httpd/conf.d/zz-hardening.conf && \
+    echo '<Directory "/var/www/html">' >> /etc/httpd/conf.d/zz-hardening.conf && \
+    echo '    Options -Indexes' >> /etc/httpd/conf.d/zz-hardening.conf && \
+    echo '</Directory>' >> /etc/httpd/conf.d/zz-hardening.conf
 
 EXPOSE 80
 CMD ["httpd", "-DFOREGROUND"]
