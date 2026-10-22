@@ -37,6 +37,14 @@ jobs:
             rocky_version: "10"
             codename: ""
             extra: ""
+          - src: remi
+            distro: rocky
+            context: remi/rocky
+            tagos: rocky9
+            php: "7.4"
+            rocky_version: "9"
+            codename: ""
+            extra: ""
     steps:
       - name: Checkout
         uses: actions/checkout@v4

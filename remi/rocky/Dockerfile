@@ -9,6 +9,19 @@ ARG PHP_EXTENSIONS="cli mbstring opcache xml curl zip intl bcmath pdo"
 ARG PHP_EXTRA_EXTENSIONS=""
 ENV PHP_VERSION=${PHP_VERSION}
 
+# Override labels inherited from the rockylinux/rockylinux base image (name, vendor,
+# version, summary, license, io.buildah.version, org.opencontainers.image.authors/
+# vendor/licenses) — otherwise they leak Rocky's own identity/metadata into this image.
+LABEL name="php-base" \
+      vendor="" \
+      version="${PHP_VERSION}" \
+      summary="PHP ${PHP_VERSION} base image (Remi/Rocky)" \
+      license="" \
+      io.buildah.version="" \
+      org.opencontainers.image.authors="" \
+      org.opencontainers.image.vendor="" \
+      org.opencontainers.image.licenses=""
+
 RUN echo -e 'retries=10\ntimeout=30' >> /etc/dnf/dnf.conf && \
     dnf upgrade -y && \
     dnf install -y epel-release && \
