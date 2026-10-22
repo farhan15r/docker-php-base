@@ -9,7 +9,8 @@ ARG PHP_EXTENSIONS="cli mbstring opcache xml curl zip intl bcmath pdo"
 ARG PHP_EXTRA_EXTENSIONS=""
 ENV PHP_VERSION=${PHP_VERSION}
 
-RUN dnf upgrade -y && \
+RUN echo -e 'retries=10\ntimeout=30' >> /etc/dnf/dnf.conf && \
+    dnf upgrade -y && \
     dnf install -y epel-release && \
     dnf install -y https://rpms.remirepo.net/enterprise/remi-release-${ROCKY_VERSION}.rpm && \
     dnf module reset -y php && \

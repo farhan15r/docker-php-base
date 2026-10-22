@@ -71,8 +71,8 @@ jobs:
             UBUNTU_CODENAME=${{ matrix.cfg.codename }}
             PHP_VERSION=${{ matrix.cfg.php }}
             PHP_EXTRA_EXTENSIONS=${{ matrix.cfg.extra }}
-          cache-from: type=gha,scope=${{ matrix.cfg.src }}-${{ matrix.cfg.distro }}-${{ matrix.variant }}-${{ matrix.cfg.php }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.cfg.src }}-${{ matrix.cfg.distro }}-${{ matrix.variant }}-${{ matrix.cfg.php }}
+          cache-from: type=gha,scope=${{ matrix.cfg.src }}-${{ matrix.cfg.distro }}-${{ matrix.cfg.php }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.cfg.src }}-${{ matrix.cfg.distro }}-${{ matrix.cfg.php }}
 
       - name: Read PHP version from built image
         id: version
@@ -86,12 +86,15 @@ jobs:
         run: |
           date_tag=$(date -u +%Y%m%d)
           image="${REGISTRY}/${IMAGE_NAME}"
-          immutable="$image:${{ steps.version.outputs.full }}-${{ matrix.variant }}-${{ matrix.cfg.tagos }}-${date_tag}"
-          patch="$image:${{ steps.version.outputs.full }}-${{ matrix.variant }}-${{ matrix.cfg.tagos }}"
+          version="${{ steps.version.outputs.full }}-${{ matrix.variant }}-${{ matrix.cfg.tagos }}"
+          immutable="$image:${version}-${date_tag}"
+          patch="$image:${version}"
           minor="$image:${{ matrix.cfg.php }}-${{ matrix.variant }}-${{ matrix.cfg.tagos }}"
           echo "immutable=$immutable" >> "$GITHUB_OUTPUT"
           echo "patch=$patch" >> "$GITHUB_OUTPUT"
           echo "minor=$minor" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
 
       - name: Refuse to overwrite an existing immutable tag
         run: |
@@ -119,5 +122,11 @@ jobs:
             PHP_EXTRA_EXTENSIONS=${{ matrix.cfg.extra }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
-          cache-from: type=gha,scope=${{ matrix.cfg.src }}-${{ matrix.cfg.distro }}-${{ matrix.variant }}-${{ matrix.cfg.php }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.cfg.src }}-${{ matrix.cfg.distro }}-${{ matrix.variant }}-${{ matrix.cfg.php }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}/pkgs/container/php-base
+            org.opencontainers.image.title=php-base
+            org.opencontainers.image.description=PHP ${{ matrix.cfg.php }} (${{ matrix.variant }}) base image built from ${{ matrix.cfg.src }} on ${{ matrix.cfg.distro }}
+            org.opencontainers.image.version=${{ steps.tags.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ steps.tags.outputs.created }}
+          cache-from: type=gha,scope=${{ matrix.cfg.src }}-${{ matrix.cfg.distro }}-${{ matrix.cfg.php }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.cfg.src }}-${{ matrix.cfg.distro }}-${{ matrix.cfg.php }}
