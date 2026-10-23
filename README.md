@@ -2,8 +2,8 @@
 
 Custom PHP base Docker images, built from upstream PHP repositories and pushed to GHCR as `ghcr.io/farhan15r/php-base`.
 
-- **Sources**: [Remi](https://rpms.remirepo.net/) (Rocky Linux 10) and [Ondřej Surý](https://deb.sury.org/) (Debian trixie, Ubuntu noble)
-- **PHP versions**: 7.4, 8.1, 8.3, 8.4, … (one Dockerfile per source/distro, version selected via build-arg)
+- **Sources**: [Remi](https://rpms.remirepo.net/) (Rocky Linux 10, 9) and [Ondřej Surý](https://deb.sury.org/) (Debian trixie, Ubuntu noble)
+- **PHP versions**: 7.4 (Rocky); 7.0, 7.2, 7.4 (Debian trixie); more planned (8.1, 8.3, 8.4, …) — one Dockerfile per source/distro, version selected via build-arg
 - **Variants**: `fpm` and `apache`, built from the same multi-stage Dockerfile via `--target`
 
 > **Why this exists**: this project targets PHP versions that are no longer supported — either by PHP itself (EOL) or by the distro's own repositories — so it relies on third-party backport repos (Remi for Rocky Linux, Ondřej Surý for Debian/Ubuntu) to still get these versions with security patches.
@@ -12,11 +12,11 @@ Custom PHP base Docker images, built from upstream PHP repositories and pushed t
 
 | Source | Distro | Dockerfile | Status |
 | --- | --- | --- | --- |
-| Remi | Rocky Linux 10 | [`remi/rocky/Dockerfile`](remi/rocky/Dockerfile) | ✅ built & tested (PHP 7.4) |
-| Ondřej | Debian trixie | `ondrej/debian/Dockerfile` | not built yet |
+| Remi | Rocky Linux 10, 9 | [`remi/rocky/Dockerfile`](remi/rocky/Dockerfile) | ✅ built & tested (PHP 7.4) |
+| Ondřej | Debian trixie | [`ondrej/debian/Dockerfile`](ondrej/debian/Dockerfile) | ✅ built & tested (PHP 7.0, 7.2, 7.4) |
 | Ondřej | Ubuntu noble | `ondrej/ubuntu/Dockerfile` | not built yet |
 
-CI (`.github/workflows/build.yml`) builds and pushes to GHCR on push to `main`, monthly (to pick up the latest backports), or on demand — currently scoped to the Remi/Rocky combination above; not yet verified against a real GHCR push. See [AGENTS.md](AGENTS.md) for the full design rationale, tag scheme, and remaining steps.
+CI (`.github/workflows/build.yml`) builds and pushes to GHCR on push to `main`, monthly (to pick up the latest backports), or on demand — matrix currently covers the five source/distro/PHP-version combinations above; not yet verified against a real GHCR push. See [AGENTS.md](AGENTS.md) for the full design rationale, tag scheme, and remaining steps.
 
 ## Building locally
 
@@ -34,6 +34,12 @@ docker build --target apache \
   --build-arg ROCKY_VERSION=10 \
   --build-arg PHP_VERSION=7.4 \
   -t php-base:7.4-apache-rocky remi/rocky
+
+# Ondřej/Debian, Apache variant
+docker build --target apache \
+  --build-arg DEBIAN_CODENAME=trixie \
+  --build-arg PHP_VERSION=7.4 \
+  -t php-base:7.4-apache-trixie ondrej/debian
 ```
 
 Smoke test:
@@ -41,6 +47,7 @@ Smoke test:
 ```sh
 docker run --rm php-base:7.4-fpm-rocky php -v
 docker run --rm php-base:7.4-apache-rocky httpd -M | grep -i php
+docker run --rm php-base:7.4-apache-trixie apache2ctl -M | grep -i php
 ```
 
 Every image records its installed PHP-related packages at `/etc/php-packages.txt`.
@@ -60,7 +67,7 @@ docker build --target fpm \
 
 ## Production hardening
 
-Applied by default in `remi/rocky/Dockerfile` — no build-arg needed, no extra flags to remember:
+Applied by default in both `remi/rocky/Dockerfile` and `ondrej/debian/Dockerfile` — no build-arg needed, no extra flags to remember:
 
 | Area | Setting | Effect |
 | --- | --- | --- |
@@ -80,6 +87,10 @@ Applied by default in `remi/rocky/Dockerfile` — no build-arg needed, no extra 
 > **Note**: `opcache.validate_timestamps = 0` means PHP stops checking file mtimes on every request — it caches compiled opcode and never looks at the source file again until the process restarts. This makes the image effectively **immutable at runtime**: if you mount live code over `/var/www/html` for local dev, edits won't be picked up without restarting the container. It's safe here because this is a build-time-baked image (a code change means rebuilding the image), but don't rely on this setting for a hot-reload dev workflow.
 
 See [AGENTS.md](AGENTS.md#production-hardening) for the rationale and gotchas behind each of these (e.g. why removing `autoindex.conf` matters once `mod_autoindex` is disabled).
+
+### Apache: `.htaccess` works out of the box
+
+Both Apache variants ship `mod_rewrite` enabled and `AllowOverride All` on `/var/www/html` — the Rocky/httpd and Debian/apache2 upstream defaults are `AllowOverride None` (and Debian also disables `mod_rewrite` by default), which silently ignores `.htaccess` entirely with no config-syntax error to reveal it. This is pre-configured so framework/app `.htaccess` rules (Laravel, WordPress, etc.) just work without extra setup.
 
 ## Tags (planned)
 
