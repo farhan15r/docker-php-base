@@ -85,6 +85,7 @@ RUN echo 'ServerTokens Prod' > /etc/httpd/conf.d/zz-hardening.conf && \
     echo 'TraceEnable Off' >> /etc/httpd/conf.d/zz-hardening.conf && \
     echo '<Directory "/var/www/html">' >> /etc/httpd/conf.d/zz-hardening.conf && \
     echo '    Options -Indexes' >> /etc/httpd/conf.d/zz-hardening.conf && \
+    echo '    AllowOverride All' >> /etc/httpd/conf.d/zz-hardening.conf && \
     echo '</Directory>' >> /etc/httpd/conf.d/zz-hardening.conf
 
 EXPOSE 80

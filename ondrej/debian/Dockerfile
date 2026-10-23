@@ -91,7 +91,7 @@ RUN apt-get update && \
     chown ${APACHE_RUN_USER}:${APACHE_RUN_GROUP} ${APACHE_RUN_DIR} ${APACHE_LOCK_DIR} && \
     ln -sf /etc/php/${PHP_VERSION}/mods-available/99-hardening.ini /etc/php/${PHP_VERSION}/apache2/conf.d/99-hardening.ini && \
     a2dismod -f mpm_event >/dev/null 2>&1 || true && \
-    a2enmod mpm_prefork php${PHP_VERSION} && \
+    a2enmod mpm_prefork php${PHP_VERSION} rewrite && \
     a2dismod -f autoindex status && \
     a2disconf serve-cgi-bin && \
     sed -i 's|^ErrorLog .*|ErrorLog /dev/stderr|' /etc/apache2/apache2.conf && \
@@ -107,6 +107,7 @@ RUN echo 'ServerTokens Prod' > /etc/apache2/conf-available/zz-hardening.conf && 
     echo 'TraceEnable Off' >> /etc/apache2/conf-available/zz-hardening.conf && \
     echo '<Directory "/var/www/html">' >> /etc/apache2/conf-available/zz-hardening.conf && \
     echo '    Options -Indexes' >> /etc/apache2/conf-available/zz-hardening.conf && \
+    echo '    AllowOverride All' >> /etc/apache2/conf-available/zz-hardening.conf && \
     echo '</Directory>' >> /etc/apache2/conf-available/zz-hardening.conf && \
     a2enconf zz-hardening
 
