@@ -109,7 +109,13 @@ jobs:
       - name: Read PHP version from built image
         id: version
         run: |
-          full=$(docker run --rm local/php-base:build php -r 'echo PHP_VERSION;')
+          raw=$(docker run --rm local/php-base:build php -r 'echo PHP_VERSION;')
+          echo "Raw PHP_VERSION: $raw"
+          # Ondřej/Sury embeds the full package build string in the PHP_VERSION constant
+          # itself for EOL branches (e.g. "7.0.33-93+0~20261022.119+debian13~1.gbp952195")
+          # — "+" and "~" aren't valid Docker tag characters, so keep only the semver
+          # patch (major.minor.patch) for tagging.
+          full=$(echo "$raw" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+')
           echo "Detected PHP version: $full"
           echo "full=$full" >> "$GITHUB_OUTPUT"
 
